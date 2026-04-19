@@ -6,7 +6,7 @@ Linux: one container runs both the Rust app (frontend included) and Obico ML.
 
 ## Current Issues
 This project just started and it already took quite a lot of my time so its not 100% finished..
-- No Windows support (comming soon!)
+- No Windows support (comming soon! I just need to get a windows pc to try)
 - Upload not working
 - Axis Control need to be made
 - Canvas filament management need to be made
