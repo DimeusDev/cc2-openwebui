@@ -12,6 +12,11 @@ This project just started and it already took quite a lot of my time so its not 
 - Canvas filament management need to be made
 - Start print not fully working
 
+## Features
+- Full Web UI
+- Customisable AI print failures detection with Obico ML
+- Notifications support (NTFY and Discord webhook)
+
 ## Run with Docker
 
 ```bash
