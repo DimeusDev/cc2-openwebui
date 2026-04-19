@@ -11,8 +11,10 @@ This project just started and it already took quite a lot of my time so its not 
 - Axis Control need to be made
 - Canvas filament management need to be made
 - Start print not fully working
+- UI is not really responsive (will be fixed dw)
 
 ## Features
+- Automatic printer recognition
 - Full Web UI
 - Customisable AI print failures detection with Obico ML
 - Notifications support (NTFY and Discord webhook)
