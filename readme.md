@@ -12,6 +12,7 @@ This project just started and it already took quite a lot of my time so its not 
 - Canvas filament management need to be made
 - Start print not fully working
 - UI is not really responsive (will be fixed dw)
+- UI looks ai cause i kinda suck at styling but ill try to remake it all myself ^^
 
 ## Features
 - Automatic printer recognition
