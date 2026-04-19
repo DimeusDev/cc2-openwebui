@@ -1,0 +1,22 @@
+[printer]
+ip = ""
+printer_id = ""
+pincode = ""
+
+[detection]
+enabled = true
+interval_secs = 15
+notify_threshold = 0.5
+pause_threshold = 0.7
+confirmation_frames = 2
+obico_url = "http://localhost:3333"
+
+[notifications]
+destinations = []
+
+[server]
+host = "0.0.0.0"
+port = 8484
+
+[logging]
+level = "info"

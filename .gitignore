@@ -1,0 +1,14 @@
+/target/
+/frontend/node_modules/
+/frontend/dist/
+/frontend/build/
+/frontend/.svelte-kit/
+
+/snapshots/
+/tmp/
+/data/
+
+/config.toml
+!/config.example.toml
+
+.env
