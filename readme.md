@@ -17,16 +17,10 @@ This project just started and it already took quite a lot of my time so its not 
 - Customisable AI print failures detection with Obico ML
 - Notifications support (NTFY and Discord webhook)
 
-## Run with Docker
+## Run (Docker Compose)
 
 ```bash
-docker build -t cc2-openwebui .
-docker run -d \
-  --name cc2-openwebui \
-  --restart unless-stopped \
-  --network host \
-  -v cc2_openwebui_state:/work \
-  cc2-openwebui
+docker compose up -d --build
 ```
 
 Then open `http://127.0.0.1:8484` and do setup from onboarding.

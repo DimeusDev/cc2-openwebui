@@ -158,7 +158,10 @@ impl AppConfig {
                 (c, configured)
             }
             Err(e) => {
-                eprintln!("warn: config parse/validation error, starting with defaults: {e}");
+                let msg = e.to_string();
+                if !msg.contains("missing field `printer`") {
+                    eprintln!("warn: config parse/validation error, starting with defaults: {e}");
+                }
                 (Self::default(), false)
             }
         }

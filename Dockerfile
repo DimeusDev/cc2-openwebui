@@ -19,13 +19,14 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /src/target/release/cc2-openwebui /usr/local/bin/cc2-openwebui
+COPY --from=builder /src/frontend/dist /usr/frontend/dist
 
 RUN mkdir -p /work /work/data /work/snapshots \
     && printf '%s\n' \
     '#!/usr/bin/env sh' \
     'set -eu' \
     'export PORT="${PORT:-3333}"' \
-    'python3 /app/server.py &' \
+    'gunicorn -w 1 -b 0.0.0.0:"${PORT}" --chdir /app server:app &' \
     'ML_PID=$!' \
     "trap 'kill \"\$ML_PID\" 2>/dev/null || true' INT TERM EXIT" \
     'cd /work' \
