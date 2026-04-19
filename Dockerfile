@@ -1,7 +1,9 @@
-FROM rust:1.94-slim AS builder
+FROM rust:1.94-bullseye AS builder
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends nodejs npm ca-certificates \
+    && apt-get install -y --no-install-recommends ca-certificates curl gnupg \
+    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y --no-install-recommends nodejs \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /src
@@ -23,7 +25,7 @@ RUN mkdir -p /work /work/data /work/snapshots \
     '#!/usr/bin/env sh' \
     'set -eu' \
     'export PORT="${PORT:-3333}"' \
-    'python /app/server.py &' \
+    'python3 /app/server.py &' \
     'ML_PID=$!' \
     "trap 'kill \"\$ML_PID\" 2>/dev/null || true' INT TERM EXIT" \
     'cd /work' \
