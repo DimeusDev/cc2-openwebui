@@ -17,8 +17,6 @@
   let printers: Array<{ ip: string }> = [];
   let selectedIp = '';
   let manualIp = '';
-  let hasPincode = false;
-  let pincode = '';
   let verifying = false;
   let verifyProgress = '';
   let savingPrinter = false;
@@ -59,18 +57,16 @@
       verifyProgress = 'Connecting to ' + ip + '…';
       await new Promise((r) => setTimeout(r, 300));
       verifyProgress = 'Identifying printer…';
-      const result = await verifyPrinter(ip, hasPincode ? pincode.toUpperCase() : '');
+      const result = await verifyPrinter(ip, '');
       if (!result.success) throw new Error('Device responded but is not a CC2.');
       verifyProgress = 'Saving configuration…';
       savingPrinter = true;
-      await saveConfig(ip, result.printer_id, hasPincode ? pincode.toUpperCase() : '');
+      await saveConfig(ip, result.printer_id, '');
       savingPrinter = false;
       dispatch('complete');
     } catch (e) {
       const msg = toErrorMessage(e).toLowerCase();
-      if (msg.includes('pincode') || msg.includes('invalid')) {
-        error = 'Invalid pincode. Check the 6-character code in your printer settings.';
-      } else if (msg.includes('timeout') || msg.includes('no response')) {
+      if (msg.includes('timeout') || msg.includes('no response')) {
         error = `No response from ${ip}. Check the IP and that the printer is on.`;
       } else if (msg.includes('refused') || msg.includes('connection')) {
         error = `Could not connect to ${ip}. Verify the address.`;
@@ -80,11 +76,6 @@
       substep = 'configure';
     }
     verifying = false;
-  }
-
-  function handlePincodeInput(e: Event) {
-    const t = e.target as HTMLInputElement;
-    pincode = t.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
   }
 </script>
 
@@ -182,28 +173,19 @@
           <input id="ip" class="input mono" type="text" bind:value={manualIp} placeholder="192.168.1.100" />
         {/if}
       </div>
-      <label class="inline-check">
-        <input type="checkbox" bind:checked={hasPincode} />
-        <span>My printer shows a 6-character pincode</span>
-      </label>
-      {#if hasPincode}
-        <div class="field" in:fly={{ y: -6, duration: 180 }}>
-          <label class="field-label" for="pin">Pincode</label>
-          <input
-            id="pin"
-            class="input mono pin"
-            class:valid={pincode.length === 6}
-            type="text"
-            value={pincode}
-            on:input={handlePincodeInput}
-            placeholder="ABCDEF"
-            maxlength="6"
-          />
-          {#if pincode.length > 0 && pincode.length < 6}
-            <span class="field-hint">{pincode.length}/6 characters</span>
-          {/if}
-        </div>
-      {/if}
+      <div class="field pincode-disabled">
+        <label class="field-label" for="pin">Pincode</label>
+        <input
+          id="pin"
+          class="input mono pin"
+          type="text"
+          value=""
+          placeholder="Pincode disabled for now"
+          maxlength="6"
+          disabled
+        />
+        <span class="field-hint warn">Please disable pincode in your LAN Only settings. (Pincode Support Comming Soon)</span>
+      </div>
       {#if error}<div class="alert err">{error}</div>{/if}
       <div class="actions">
         <button class="btn ghost" on:click={() => { substep = selectedIp ? 'scan' : 'intro'; error = ''; }}>← Back</button>
@@ -283,10 +265,9 @@
   .field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
   .field-label { font-size: 11px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
   .field-hint { font-size: 11px; color: var(--muted); }
-  .inline-check { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text); cursor: pointer; padding: 8px 0 4px; }
-  .inline-check input { accent-color: var(--accent); }
   .pin { letter-spacing: 0.25em; text-transform: uppercase; font-size: 15px; }
-  .pin.valid { border-color: var(--success); }
+  .pincode-disabled .pin { opacity: 0.55; cursor: not-allowed; }
+  .field-hint.warn { color: var(--danger); }
 
   /* Verify */
   .verify-stack { display: flex; flex-direction: column; align-items: center; gap: 14px; }

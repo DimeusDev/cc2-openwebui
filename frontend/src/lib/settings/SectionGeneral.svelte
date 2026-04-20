@@ -13,9 +13,9 @@
   <div class="row">
     <div class="row-label">
       <div class="row-title">Pincode</div>
-      <div class="row-sub">Leave empty if pin-protection is disabled.</div>
+      <div class="row-sub row-sub-warn">Please disable pincode in your LAN Only settings. (Pincode Support Comming Soon)</div>
     </div>
-    <input id="pin" class="input mono row-input short" type="text" bind:value={printer.pincode} placeholder="A1bC2" maxlength="6" />
+    <input id="pin" class="input mono row-input short pin-disabled" type="text" value="" placeholder="Pincode disabled for now" maxlength="6" disabled />
   </div>
 </div>
 
@@ -38,8 +38,10 @@
   .row-label { min-width: 0; }
   .row-title { font-size: 12.5px; font-weight: 500; color: var(--text); }
   .row-sub { font-size: 11.5px; color: var(--muted); margin-top: 2px; line-height: 1.45; }
+  .row-sub-warn { color: var(--danger); }
   .row-input { width: 100%; }
   .row-input.short { max-width: 140px; justify-self: end; }
+  .pin-disabled { opacity: 0.55; cursor: not-allowed; }
 
   @media (max-width: 700px) {
     .row { grid-template-columns: 1fr; gap: 8px; }

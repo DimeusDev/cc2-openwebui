@@ -52,7 +52,7 @@
   const navGroups: Array<{ title: string; items: NavItem[] }> = [
     {
       title: 'Setup',
-      items: [{ id: 'general', label: 'Printer', desc: 'Connection & pincode', icon: 'printer' }],
+      items: [{ id: 'general', label: 'Printer', desc: 'Connection', icon: 'printer' }],
     },
     {
       title: 'Features',
@@ -72,7 +72,7 @@
   ];
 
   const sectionMeta: Record<Section, { title: string; desc: string }> = {
-    general: { title: 'Printer Connection', desc: 'The IP your CC2 exposes on the LAN and the optional pincode.' },
+    general: { title: 'Printer Connection', desc: 'The IP your CC2 exposes on the LAN.' },
     detection: { title: 'AI Failure Detection', desc: 'AI failure detection with Obico ML container.' },
     notifications: { title: 'Notifications', desc: 'Push events via ntfy or Discord webhook. Add and configure notification destinations.' },
     logs: { title: 'Activity Logs', desc: 'Connection events, print jobs, detections, etc' },
