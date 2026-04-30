@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onDestroy } from 'svelte';
   import { printer } from '../stores';
   import { pausePrint, resumePrint, stopPrint, getThumbnail } from '../api';
   import ConfirmModal from './ConfirmModal.svelte';
@@ -24,14 +25,17 @@
 
   let thumbDataUri = '';
   const thumbCache = new Map<string, string>();
+  let thumbRetry: ReturnType<typeof setTimeout> | null = null;
 
   $: if (isActive && filename) {
     loadThumb(filename);
   } else if (!isActive) {
     thumbDataUri = '';
+    if (thumbRetry !== null) { clearTimeout(thumbRetry); thumbRetry = null; }
   }
 
   async function loadThumb(name: string) {
+    if (thumbRetry !== null) { clearTimeout(thumbRetry); thumbRetry = null; }
     const cached = thumbCache.get(name);
     if (cached !== undefined) { thumbDataUri = cached; return; }
     try {
@@ -40,11 +44,18 @@
         const uri = `data:image/png;base64,${resp.thumbnail}`;
         thumbCache.set(name, uri);
         if (filename === name) thumbDataUri = uri;
+        return;
       }
-    } catch {
-      // unavailable, keep placeholder
-    }
+    } catch { }
+    thumbRetry = setTimeout(() => {
+      thumbRetry = null;
+      if (isActive && filename === name) loadThumb(name);
+    }, 30_000);
   }
+
+  onDestroy(() => {
+    if (thumbRetry !== null) clearTimeout(thumbRetry);
+  });
 
   function formatTime(sec: number): string {
     if (!sec) return '--';
@@ -130,11 +141,9 @@
         {#if thumbDataUri}
           <img src={thumbDataUri} alt="Print preview" class="thumb-img" />
         {:else}
-          <svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect width="52" height="52" rx="5" fill="#1a2740"/>
-            <path d="M26 10L42 18V34L26 42L10 34V18L26 10Z" stroke="#2d87f0" stroke-width="2" fill="none"/>
-            <path d="M26 10V42M10 18L42 18M10 34L42 34" stroke="#2d87f0" stroke-width="1" stroke-dasharray="3 3" opacity="0.5"/>
-            <circle cx="26" cy="26" r="4" fill="#2d87f0" opacity="0.8"/>
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
+            <line x1="6" y1="6" x2="22" y2="22" stroke="var(--border2)" stroke-width="2" stroke-linecap="round"/>
+            <line x1="22" y1="6" x2="6" y2="22" stroke="var(--border2)" stroke-width="2" stroke-linecap="round"/>
           </svg>
         {/if}
       {:else}
