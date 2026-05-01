@@ -66,5 +66,12 @@ pub async fn update_settings(
         )));
     }
 
+    let det_config = config.detection.clone();
+    let det_enabled = config.detection.enabled;
+    drop(config);
+
+    let _ = state.det_config_tx.send(det_config);
+    let _ = state.det_enabled_tx.send(det_enabled);
+
     Ok(Json(Value::Null))
 }

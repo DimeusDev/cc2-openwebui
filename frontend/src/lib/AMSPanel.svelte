@@ -34,17 +34,23 @@
     id: number;
     color: string | null;
     material: string;
+    plasticType: string;
+    plasticFamily: string;
+    brand: string;
     empty: boolean;
   };
 
   $: spools = [0, 1, 2, 3].map<Spool>((i) => {
     const tray = trayList[i];
-    if (!tray) return { id: i + 1, color: null, material: '-', empty: true };
+    if (!tray) return { id: i + 1, color: null, material: '-', plasticType: '-', plasticFamily: '-', brand: '', empty: true };
     const rawColor = tray.filament_color?.trim();
     const hexOnly = rawColor?.startsWith('#') ? rawColor.slice(1) : rawColor;
     const color = hexOnly && hexOnly.length >= 6 ? `#${hexOnly.slice(0, 6)}` : null;
     const material = (tray.tray_type || tray.filament_type || tray.filament_name || '').toUpperCase() || '-';
-    return { id: i + 1, color, material, empty: !color };
+    const plasticType = tray.filament_name || '-';
+    const plasticFamily = tray.filament_type || '-';
+    const brand = tray.brand || '';
+    return { id: i + 1, color, material, plasticType, plasticFamily, brand, empty: !color };
   });
 
   let loadedSlot = -1;
@@ -124,9 +130,19 @@
           <span class="info-value mono">{spools[selected]?.id ?? '-'}</span>
         </div>
         <div class="info-row">
-          <span class="info-label">Material</span>
-          <span class="info-value">{spools[selected]?.material ?? '-'}</span>
+          <span class="info-label">Type</span>
+          <span class="info-value">{spools[selected]?.plasticType ?? '-'}</span>
         </div>
+        <div class="info-row">
+          <span class="info-label">Family</span>
+          <span class="info-value">{spools[selected]?.plasticFamily ?? '-'}</span>
+        </div>
+        {#if spools[selected]?.brand?.toLowerCase() === 'elegoo'}
+          <div class="info-row">
+            <span class="info-label">Brand</span>
+            <span class="brand-tag elegoo">Elegoo</span>
+          </div>
+        {/if}
         <div class="info-row">
           <span class="info-label">State</span>
           <span class="info-value">
@@ -357,6 +373,22 @@
   }
   .mini-chip.on { color: var(--success); background: var(--success-dim); border-color: rgba(74,140,92,0.35); }
   .mini-chip.off { color: var(--muted2); }
+
+  .brand-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: var(--radius-pill);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .brand-tag.elegoo {
+    background: rgba(45,135,240,0.12);
+    color: var(--accent);
+    border: 1px solid rgba(45,135,240,0.3);
+  }
 
   .slot-buttons {
     display: flex;
