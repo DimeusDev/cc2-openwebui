@@ -39,6 +39,7 @@ pub struct PrinterState {
     pub connected: bool,
     pub connected_raw: bool,
     pub connected_ws: bool,
+    pub camera_connected: bool,
     pub detection_score: f64,
     pub detection_history: VecDeque<DetectionPoint>,
     /// latest detections
@@ -87,6 +88,8 @@ pub enum EventKind {
     WsDisconnected,
     RawConnected,
     RawDisconnected,
+    CameraLost,
+    CameraRestored,
     ErrorOccurred(String),
     /// loaded event kind
     Loaded(String),
@@ -101,6 +104,7 @@ impl PrinterState {
             connected: false,
             connected_raw: false,
             connected_ws: false,
+            camera_connected: false,
             detection_score: 0.0,
             detection_history: VecDeque::with_capacity(200),
             latest_detections: Vec::new(),
@@ -217,6 +221,16 @@ impl PrinterState {
             .collect();
         let skip = points.len().saturating_sub(limit);
         points.into_iter().skip(skip).collect()
+    }
+
+    /// count all persisted events without loading them
+    pub fn count_events_log() -> u64 {
+        use std::io::BufRead;
+        let Ok(f) = std::fs::File::open(EVENTS_LOG_PATH) else { return 0; };
+        std::io::BufReader::new(f)
+            .lines()
+            .filter(|l| l.as_ref().map(|s| !s.trim().is_empty()).unwrap_or(false))
+            .count() as u64
     }
 
     /// load events log

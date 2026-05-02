@@ -79,6 +79,10 @@ pub struct EventToggles {
     pub failure_pause: bool,
     #[serde(default = "default_true")]
     pub auto_paused: bool,
+    #[serde(default = "default_true")]
+    pub camera_lost: bool,
+    #[serde(default = "default_true")]
+    pub camera_restored: bool,
 }
 
 fn default_true() -> bool { true }
@@ -92,6 +96,8 @@ impl Default for EventToggles {
             failure_notify: true,
             failure_pause: true,
             auto_paused: true,
+            camera_lost: true,
+            camera_restored: true,
         }
     }
 }

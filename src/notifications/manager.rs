@@ -99,6 +99,8 @@ fn event_kind_label(kind: &EventKind) -> &'static str {
         EventKind::FailureNotifyThreshold => "failure_notify",
         EventKind::FailurePauseThreshold => "failure_pause",
         EventKind::AutoPaused => "auto_paused",
+        EventKind::CameraLost => "camera_lost",
+        EventKind::CameraRestored => "camera_restored",
         _ => "other",
     }
 }
@@ -111,6 +113,8 @@ fn event_matches_toggles(kind: &EventKind, t: &EventToggles) -> bool {
         EventKind::FailureNotifyThreshold => t.failure_notify,
         EventKind::FailurePauseThreshold => t.failure_pause,
         EventKind::AutoPaused => t.auto_paused,
+        EventKind::CameraLost => t.camera_lost,
+        EventKind::CameraRestored => t.camera_restored,
         _ => false,
     }
 }

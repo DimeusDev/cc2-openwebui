@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { connect, disconnect, sendPing } from './ws';
+  import { connect, disconnect, sendPing, wsConnected } from './ws';
   import { printer } from './stores';
   import { checkSetup } from './api';
   import Onboarding from './lib/Onboarding.svelte';
@@ -94,6 +94,7 @@
   <div class="shell">
     <Topbar
       connected={$printer.connected}
+      serverConnected={$wsConnected}
       printerIp={$printer.printer_ip}
       on:openSettings={() => showSettings = true}
     />

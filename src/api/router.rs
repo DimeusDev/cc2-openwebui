@@ -16,7 +16,7 @@ use super::setup;
 use super::snapshots;
 use super::upload;
 use super::ws;
-use crate::camera::FrameBuffer;
+use crate::camera::{CameraStatus, FrameBuffer, FrameBroadcast};
 use crate::config::AppConfig;
 use crate::printer::manager::PrinterManager;
 use crate::printer::state::PrinterState;
@@ -31,6 +31,8 @@ pub struct AppState {
     pub det_enabled_tx: Arc<tokio::sync::watch::Sender<bool>>,
     pub det_config_tx: Arc<tokio::sync::watch::Sender<crate::config::DetectionConfig>>,
     pub frame_buffer: FrameBuffer,
+    pub camera_status: Arc<CameraStatus>,
+    pub frame_broadcast: FrameBroadcast,
 }
 
 pub fn build_router(
@@ -42,6 +44,8 @@ pub fn build_router(
     det_enabled_tx: tokio::sync::watch::Sender<bool>,
     det_config_tx: tokio::sync::watch::Sender<crate::config::DetectionConfig>,
     frame_buffer: FrameBuffer,
+    camera_status: Arc<CameraStatus>,
+    frame_broadcast: FrameBroadcast,
 ) -> Router {
     let app_state = AppState {
         manager,
@@ -52,6 +56,8 @@ pub fn build_router(
         det_enabled_tx: Arc::new(det_enabled_tx),
         det_config_tx: Arc::new(det_config_tx),
         frame_buffer,
+        camera_status,
+        frame_broadcast,
     };
 
     let snapshots_dir = std::path::Path::new("snapshots");
@@ -101,6 +107,8 @@ pub fn build_router(
                 .delete(notifications::delete_destination))
         .route("/api/notifications/destinations/:id/test", post(notifications::test_destination))
         .route("/api/camera/snapshot", get(camera::snapshot))
+        .route("/api/camera/stream", get(camera::stream))
+        .route("/api/camera/status", get(camera::status))
         .route("/api/settings",
             get(settings::get_settings).post(settings::update_settings))
         .route("/api/logs",

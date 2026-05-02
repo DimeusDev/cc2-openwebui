@@ -15,7 +15,7 @@ use tracing::{error, info};
 use camera::{spawn_frame_grabber, FrameBuffer};
 use config::AppConfig;
 use printer::manager::PrinterManager;
-use printer::state::PrinterState;
+use printer::state::{EventKind, PrinterState};
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -49,9 +49,10 @@ async fn main() {
 
     {
         let past = PrinterState::load_events_from_log(100);
-        if !past.is_empty() {
+        let total = PrinterState::count_events_log();
+        if !past.is_empty() || total > 0 {
             let mut s = manager.state.write().await;
-            s.events_total = past.len() as u64;
+            s.events_total = total.max(past.len() as u64);
             s.events = past;
         }
     }
@@ -69,9 +70,42 @@ async fn main() {
 
     let frame_buffer: FrameBuffer = Arc::new(RwLock::new(None));
 
-    if pre_configured {
-        spawn_frame_grabber(config.printer.ip.clone(), frame_buffer.clone());
+    let (camera_status, frame_broadcast) = if pre_configured {
+        let (cam_status, cam_broadcast, cam_connected_rx) =
+            spawn_frame_grabber(config.printer.ip.clone(), frame_buffer.clone());
         info!("frame grabber started for {}", config.printer.ip);
+
+        let watcher_state = manager_state.clone();
+        let watcher_changed = state_changed_tx.clone();
+        tokio::spawn(async move {
+            let mut rx = cam_connected_rx;
+            loop {
+                if rx.changed().await.is_err() { break; }
+                let connected = *rx.borrow();
+                let (kind, msg) = if connected {
+                    (EventKind::CameraRestored, "Camera feed restored".to_string())
+                } else {
+                    (EventKind::CameraLost, "Camera feed lost".to_string())
+                };
+                {
+                    let mut s = watcher_state.write().await;
+                    s.camera_connected = connected;
+                    s.add_event(kind, msg);
+                }
+                let _ = watcher_changed.send(());
+            }
+        });
+
+        (cam_status, cam_broadcast)
+    } else {
+        let (tx, _) = tokio::sync::broadcast::channel(8);
+        (
+            std::sync::Arc::new(camera::CameraStatus::default()),
+            std::sync::Arc::new(tx),
+        )
+    };
+
+    if pre_configured {
 
         let det_engine = detection::engine::DetectionEngine::new(
             config.detection.clone(),
@@ -119,6 +153,8 @@ async fn main() {
         det_enabled_tx,
         det_config_tx,
         frame_buffer,
+        camera_status,
+        frame_broadcast,
     );
 
     let addr = format!("{}:{}", config.server.host, config.server.port);

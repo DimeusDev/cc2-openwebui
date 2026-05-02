@@ -133,6 +133,7 @@ impl MqttWsClient {
                         info!("ws client shutting down");
                         connected_tx.send(false).ok();
                         state_changed_tx.send(()).ok();
+                        Self::drain_pending_rpcs(&pending_rpcs).await;
                         return Ok(());
                     }
                 }
@@ -141,6 +142,7 @@ impl MqttWsClient {
                     info!("[ws] session refresh – reconnecting");
                     connected_tx.send(false).ok();
                     state_changed_tx.send(()).ok();
+                    Self::drain_pending_rpcs(&pending_rpcs).await;
                     return Ok(());
                 }
 
@@ -253,6 +255,7 @@ impl MqttWsClient {
                             warn!("ws client received close frame");
                             connected_tx.send(false).ok();
                             state_changed_tx.send(()).ok();
+                            Self::drain_pending_rpcs(&pending_rpcs).await;
                             return Err(PrinterError::WebSocket("connection closed".to_string()));
                         }
                         Some(Ok(_)) => {}
@@ -260,12 +263,14 @@ impl MqttWsClient {
                             error!("ws client error: {e}");
                             connected_tx.send(false).ok();
                             state_changed_tx.send(()).ok();
+                            Self::drain_pending_rpcs(&pending_rpcs).await;
                             return Err(PrinterError::WebSocket(e.to_string()));
                         }
                         None => {
                             warn!("ws client stream ended");
                             connected_tx.send(false).ok();
                             state_changed_tx.send(()).ok();
+                            Self::drain_pending_rpcs(&pending_rpcs).await;
                             return Err(PrinterError::WebSocket("stream ended".to_string()));
                         }
                     }
@@ -275,7 +280,13 @@ impl MqttWsClient {
 
         connected_tx.send(false).ok();
         state_changed_tx.send(()).ok();
+        Self::drain_pending_rpcs(&pending_rpcs).await;
         Ok(())
+    }
+
+    // drop all pending senders → rpc_call receivers get Err immediately
+    async fn drain_pending_rpcs(rpcs: &PendingRpcs) {
+        rpcs.lock().await.clear();
     }
 
     async fn handle_publish(

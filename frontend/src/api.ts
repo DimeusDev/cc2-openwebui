@@ -49,6 +49,8 @@ export interface EventToggles {
   failure_notify: boolean;
   failure_pause: boolean;
   auto_paused: boolean;
+  camera_lost: boolean;
+  camera_restored: boolean;
 }
 
 export type DestinationKind = 'ntfy' | 'discord' | 'webhook';
@@ -73,6 +75,8 @@ export function defaultToggles(): EventToggles {
     failure_notify: true,
     failure_pause: true,
     auto_paused: true,
+    camera_lost: true,
+    camera_restored: true,
   };
 }
 

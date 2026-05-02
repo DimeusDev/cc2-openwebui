@@ -53,6 +53,7 @@ export interface PrinterState {
   connected: boolean;
   printer_id: string;
   printer_ip: string;
+  camera_connected: boolean;
   state: FullStatus | null;
   detection_score: number;
   detection_history: DetectionPoint[];
@@ -183,6 +184,7 @@ export const printer = writable<PrinterState>({
   connected: false,
   printer_id: '',
   printer_ip: '',
+  camera_connected: false,
   state: null,
   detection_score: 0,
   detection_history: [],

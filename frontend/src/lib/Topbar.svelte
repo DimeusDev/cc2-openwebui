@@ -3,9 +3,14 @@
   import { Globe, Settings, Printer } from 'lucide-svelte';
 
   export let connected: boolean = false;
+  export let serverConnected: boolean = true;
   export let printerIp: string = '';
 
   const dispatch = createEventDispatcher<{ openSettings: void }>();
+
+  $: pillLabel = !serverConnected ? 'Server offline' : connected ? 'Connected' : 'Offline';
+  $: pillOnline = serverConnected && connected;
+  $: pillWarn   = !serverConnected;
 </script>
 
 <header class="topbar">
@@ -20,9 +25,9 @@
 
     <span class="divider" aria-hidden="true"></span>
 
-    <div class="status-pill" class:online={connected}>
+    <div class="status-pill" class:online={pillOnline} class:warn={pillWarn}>
       <span class="dot"></span>
-      <span>{connected ? 'Connected' : 'Offline'}</span>
+      <span>{pillLabel}</span>
     </div>
   </div>
 
@@ -129,6 +134,15 @@
   .status-pill.online .dot {
     background: var(--success);
     box-shadow: 0 0 0 3px rgba(74,140,92,0.2);
+  }
+  .status-pill.warn {
+    color: var(--warning);
+    border-color: rgba(240,160,48,0.35);
+    background: var(--warning-dim);
+  }
+  .status-pill.warn .dot {
+    background: var(--warning);
+    box-shadow: 0 0 0 3px rgba(240,160,48,0.2);
   }
 
   .ip-tag {

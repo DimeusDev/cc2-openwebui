@@ -152,6 +152,7 @@ fn build_state_msg(s: &PrinterState) -> serde_json::Value {
         "type": "state",
         "connected": s.connected,
         "printer_ip": s.printer_ip,
+        "camera_connected": s.camera_connected,
         "data": data,
         "detection_score": s.detection_score,
         "detection_history": det_history,

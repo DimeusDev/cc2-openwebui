@@ -14,6 +14,7 @@
   let imgEl: HTMLImageElement;
   let canvasReady = false;
   let imgError = false;
+  let reconnectTimer: number | null = null;
 
   let detections: DetectionBox[] = [];
   let zones: ExcludeZone[] = [];
@@ -23,9 +24,11 @@
   let dragCurrent = { x: 0, y: 0 };
 
   $: connected = $printer.connected;
-  $: printerIp = $printer.printer_ip;
-  $: streamUrl = printerIp ? `http://${printerIp}:8080/?action=stream` : '';
-  $: if (connected && printerIp) imgError = false;
+  $: cameraConnected = $printer.camera_connected;
+
+  // stream is always server-relative — works on any network
+  $: streamUrl = connected ? '/api/camera/stream' : '';
+  $: if (connected) imgError = false;
 
   let pollTimer: number;
 
@@ -42,7 +45,10 @@
   onMount(() => {
     pollTimer = window.setInterval(pollDetection, 2000);
   });
-  onDestroy(() => clearInterval(pollTimer));
+  onDestroy(() => {
+    clearInterval(pollTimer);
+    if (reconnectTimer !== null) clearTimeout(reconnectTimer);
+  });
 
   function onImgLoad() {
     if (!canvas || !imgEl) return;
@@ -54,6 +60,16 @@
     canvasReady = true;
     imgError = false;
     redraw();
+  }
+
+  function onImgError() {
+    imgError = true;
+    // retry after 3s — handles transient server restarts
+    if (reconnectTimer !== null) return;
+    reconnectTimer = window.setTimeout(() => {
+      reconnectTimer = null;
+      if (connected) imgError = false;
+    }, 3000);
   }
 
   function redraw() {
@@ -127,7 +143,6 @@
     }
   }
 
-
   function canvasCoords(e: MouseEvent): { x: number; y: number } {
     const rect = canvas.getBoundingClientRect();
     const dpr = window.devicePixelRatio;
@@ -193,6 +208,20 @@
   }
 
   $: if (canvasReady) redraw();
+
+  $: statusLabel = !connected
+    ? null
+    : cameraConnected
+      ? 'Live'
+      : imgError
+        ? 'Offline'
+        : 'Reconnecting';
+
+  $: statusClass = statusLabel === 'Live'
+    ? 'pill-live'
+    : statusLabel === 'Reconnecting'
+      ? 'pill-warn'
+      : 'pill-off';
 </script>
 
 <div class="card">
@@ -202,6 +231,9 @@
     <div class="header-left">
       <CameraIcon size={13} strokeWidth={1.9} />
       <span class="card-title">Camera</span>
+      {#if statusLabel}
+        <span class="pill {statusClass}">{statusLabel}</span>
+      {/if}
     </div>
     <div class="header-right" role="none" on:click|stopPropagation on:keydown|stopPropagation>
       {#if !collapsed}
@@ -227,7 +259,7 @@
           src={streamUrl}
           alt="Camera stream"
           on:load={onImgLoad}
-          on:error={() => (imgError = true)}
+          on:error={onImgError}
         />
         <canvas
           bind:this={canvas}
@@ -247,7 +279,15 @@
       {:else}
         <div class="placeholder">
           <span class="placeholder-icon"><CameraIcon size={32} strokeWidth={1.7} /></span>
-          <span>{connected && imgError ? 'Camera unavailable' : 'Waiting for printer…'}</span>
+          <span>
+            {#if !connected}
+              Waiting for printer…
+            {:else if imgError}
+              Camera unavailable · retrying…
+            {:else}
+              Connecting to camera…
+            {/if}
+          </span>
         </div>
       {/if}
     </div>
@@ -294,6 +334,19 @@
     color: var(--muted);
   }
 
+  .pill {
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 2px 6px;
+    border-radius: 8px;
+    line-height: 1;
+  }
+  .pill-live  { background: rgba(46,204,113,0.15); color: #2ecc71; }
+  .pill-warn  { background: rgba(243,156,18,0.15);  color: #f39c12; }
+  .pill-off   { background: rgba(192,57,43,0.15);   color: #c0392b; }
+
   .chevron {
     color: var(--muted);
     transition: transform 0.2s;
@@ -339,7 +392,6 @@
     display: block;
   }
 
-  /* overlay */
   .overlay {
     position: absolute;
     inset: 0;

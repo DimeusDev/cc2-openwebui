@@ -166,6 +166,8 @@
               <label class="tgl"><input type="checkbox" bind:checked={dest.toggles.failure_notify} /> Failure risk</label>
               <label class="tgl"><input type="checkbox" bind:checked={dest.toggles.failure_pause} /> Failure confirmed</label>
               <label class="tgl"><input type="checkbox" bind:checked={dest.toggles.auto_paused} /> Auto-paused</label>
+              <label class="tgl"><input type="checkbox" bind:checked={dest.toggles.camera_lost} /> Camera lost</label>
+              <label class="tgl"><input type="checkbox" bind:checked={dest.toggles.camera_restored} /> Camera restored</label>
             </div>
 
             <div class="dest-footer">

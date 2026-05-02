@@ -38,6 +38,16 @@ pub fn format_event(event: &PrinterEvent) -> Payload {
             body: event.description.clone(),
             color: 0xe74c3c,
         },
+        EventKind::CameraLost => Payload {
+            title: "Camera Feed Lost".to_string(),
+            body: event.description.clone(),
+            color: 0xe74c3c,
+        },
+        EventKind::CameraRestored => Payload {
+            title: "Camera Feed Restored".to_string(),
+            body: event.description.clone(),
+            color: 0x2ecc71,
+        },
         _ => Payload {
             title: "CC2 Monitor".to_string(),
             body: event.description.clone(),
