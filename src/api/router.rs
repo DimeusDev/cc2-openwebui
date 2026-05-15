@@ -16,11 +16,13 @@ use super::settings;
 use super::setup;
 use super::snapshots;
 use super::upload;
+use super::version;
 use super::ws;
 use crate::camera::{CameraStatus, FrameBuffer, FrameBroadcast};
 use crate::config::AppConfig;
 use crate::printer::manager::PrinterManager;
 use crate::printer::state::PrinterState;
+use crate::update::UpdateChecker;
 
 #[derive(Clone)]
 pub struct AppState {
@@ -36,6 +38,7 @@ pub struct AppState {
     pub frame_broadcast: FrameBroadcast,
     pub db: sqlx::SqlitePool,
     pub camera_ip_tx: Arc<tokio::sync::watch::Sender<String>>,
+    pub update_checker: Arc<UpdateChecker>,
 }
 
 pub fn build_router(
@@ -51,6 +54,7 @@ pub fn build_router(
     frame_broadcast: FrameBroadcast,
     db: sqlx::SqlitePool,
     camera_ip_tx: Arc<tokio::sync::watch::Sender<String>>,
+    update_checker: Arc<UpdateChecker>,
 ) -> Router {
     let app_state = AppState {
         manager,
@@ -65,6 +69,7 @@ pub fn build_router(
         frame_broadcast,
         db,
         camera_ip_tx,
+        update_checker,
     };
 
     let snapshots_dir = std::path::Path::new("snapshots");
@@ -130,6 +135,7 @@ pub fn build_router(
         .route("/api/snapshots",
             get(snapshots::list_snapshots).delete(snapshots::delete_all_snapshots))
         .route("/api/snapshots/:filename", axum::routing::delete(snapshots::delete_snapshot))
+        .route("/api/version", get(version::get_version))
         .route("/ws", get(ws::ws_handler))
         .with_state(app_state);
 

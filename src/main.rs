@@ -7,6 +7,7 @@ mod docker;
 mod error;
 mod notifications;
 mod printer;
+mod update;
 
 use std::sync::Arc;
 use std::time::UNIX_EPOCH;
@@ -176,6 +177,10 @@ async fn main() {
         info!("notification manager started");
     }
 
+    let update_checker = update::UpdateChecker::new();
+    update_checker.clone().start();
+    info!("update checker started (current sha={})", env!("GIT_HASH"));
+
     let router = api::router::build_router(
         manager_arc,
         manager_state,
@@ -189,6 +194,7 @@ async fn main() {
         frame_broadcast,
         db,
         camera_ip_tx,
+        update_checker,
     );
 
     let addr = format!("{}:{}", config.server.host, config.server.port);

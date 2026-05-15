@@ -578,3 +578,15 @@ export async function getDetectionGrouped(
 export function snapshotUrl(filename: string): string {
   return `${BASE}/snapshots/${encodeURIComponent(filename)}`;
 }
+
+export interface VersionInfo {
+  current_sha: string;
+  latest_sha: string | null;
+  up_to_date: boolean;
+}
+
+export async function getVersion(): Promise<VersionInfo> {
+  const res = await fetch(`${BASE}/api/version`);
+  if (!res.ok) await apiError(res, 'getVersion');
+  return res.json();
+}
