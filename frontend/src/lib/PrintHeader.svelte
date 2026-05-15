@@ -45,7 +45,6 @@
 
   $: if (thumbDataUri) detectThumbBg(thumbDataUri);
 
-  // sample 16x16 thumb to choose bg contrast
   function detectThumbBg(dataUri: string) {
     const img = new Image();
     img.onload = () => {
@@ -60,7 +59,6 @@
         for (let i = 0; i < data.length; i += 4) {
           lum += (data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114) / 255;
         }
-        // dark thumb -> lighter bg, bright thumb -> darker bg
         thumbBg = (lum / (data.length / 4)) < 0.25 ? '#1d2d44' : '#0a0f1a';
       } catch { /* tainted canvas ok */ }
     };

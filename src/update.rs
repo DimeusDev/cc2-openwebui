@@ -48,8 +48,8 @@ impl UpdateChecker {
             Ok(resp) if resp.status().is_success() => {
                 if let Ok(body) = resp.text().await {
                     let latest = body.trim().to_string();
-                    // treat unknown build as always up to date so we never false-alert
-                    let up_to_date = CURRENT_SHA == "unknown" || latest == CURRENT_SHA;
+                    // unknown sha means built without git, skip
+                    let up_to_date = CURRENT_SHA.is_empty() || CURRENT_SHA == "unknown" || latest == CURRENT_SHA;
                     let mut s = self.status.write().await;
                     s.latest_sha = Some(latest.clone());
                     s.up_to_date = up_to_date;

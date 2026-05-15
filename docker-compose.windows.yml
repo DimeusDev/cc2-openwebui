@@ -3,6 +3,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        GIT_HASH: ${GIT_HASH:-unknown}
     image: cc2-openwebui:latest
     container_name: cc2-openwebui
     restart: unless-stopped

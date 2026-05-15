@@ -23,6 +23,8 @@ RUN cargo chef cook --release --locked --recipe-path recipe.json
 
 # final binary build with frontend assets present
 FROM base AS builder
+ARG GIT_HASH=unknown
+ENV GIT_HASH=$GIT_HASH
 COPY --from=cacher /src/target target
 COPY Cargo.toml Cargo.lock build.rs ./
 COPY src ./src
