@@ -19,6 +19,12 @@ This project just started and it already took quite a lot of my time so its not 
 
 ## Run (Docker Compose)
 > runs both the webui and Obico ML
+### Windows (Docker Desktop
+```bash
+docker compose -f docker-compose.windows.yml up --build
+```
+
+### Others
 ```bash
 docker compose up -d --build
 ```
