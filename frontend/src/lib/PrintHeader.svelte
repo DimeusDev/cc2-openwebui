@@ -1,8 +1,11 @@
 <script lang="ts">
   import { onDestroy } from 'svelte';
+  import { fly } from 'svelte/transition';
+  import { cubicOut } from 'svelte/easing';
   import { printer } from '../stores';
   import { pausePrint, resumePrint, stopPrint, getThumbnail } from '../api';
   import ConfirmModal from './ConfirmModal.svelte';
+  import Modal from './Modal.svelte';
   import { toErrorMessage } from './errors';
 
   $: s = $printer.state;
@@ -27,6 +30,8 @@
   let showStopModal = false;
 
   let thumbDataUri = '';
+  let showThumbModal = false;
+  let thumbBg = '#0f1421';
   const thumbCache = new Map<string, string>();
   let thumbRetry: ReturnType<typeof setTimeout> | null = null;
 
@@ -34,7 +39,32 @@
     loadThumb(filename);
   } else if (!isActive) {
     thumbDataUri = '';
+    thumbBg = '#0f1421';
     if (thumbRetry !== null) { clearTimeout(thumbRetry); thumbRetry = null; }
+  }
+
+  $: if (thumbDataUri) detectThumbBg(thumbDataUri);
+
+  // sample 16x16 thumb to choose bg contrast
+  function detectThumbBg(dataUri: string) {
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const c = document.createElement('canvas');
+        c.width = 16; c.height = 16;
+        const ctx = c.getContext('2d');
+        if (!ctx) return;
+        ctx.drawImage(img, 0, 0, 16, 16);
+        const { data } = ctx.getImageData(0, 0, 16, 16);
+        let lum = 0;
+        for (let i = 0; i < data.length; i += 4) {
+          lum += (data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114) / 255;
+        }
+        // dark thumb -> lighter bg, bright thumb -> darker bg
+        thumbBg = (lum / (data.length / 4)) < 0.25 ? '#1d2d44' : '#0a0f1a';
+      } catch { /* tainted canvas ok */ }
+    };
+    img.src = dataUri;
   }
 
   async function loadThumb(name: string) {
@@ -139,7 +169,16 @@
 
 <div class="print-card">
   <div class="print-header">
-    <div class="thumb">
+    <div
+      class="thumb"
+      class:thumb-clickable={!!thumbDataUri}
+      style="background:{thumbBg}"
+      on:click={() => { if (thumbDataUri) showThumbModal = true; }}
+      role="button"
+      tabindex={thumbDataUri ? 0 : -1}
+      on:keydown={(e) => e.key === 'Enter' && thumbDataUri && (showThumbModal = true)}
+      title={thumbDataUri ? 'Click to enlarge' : undefined}
+    >
       {#if isActive}
         {#if thumbDataUri}
           <img src={thumbDataUri} alt="Print preview" class="thumb-img" />
@@ -226,6 +265,29 @@
   {/if}
 </div>
 
+{#if showThumbModal && thumbDataUri}
+  <Modal open={true} onClose={() => (showThumbModal = false)}>
+    <div
+      class="thumb-lb"
+      role="dialog"
+      aria-modal="true"
+      in:fly={{ y: 10, duration: 200, easing: cubicOut }}
+    >
+      <div class="thumb-lb-head">
+        <span class="thumb-lb-name">{shortName(filename)}</span>
+        <button class="thumb-lb-close" on:click={() => (showThumbModal = false)} aria-label="Close">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M3 3l8 8M11 3L3 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+      <div class="thumb-lb-img-wrap" style="background:{thumbBg}">
+        <img src={thumbDataUri} alt="Print preview" class="thumb-lb-img" />
+      </div>
+    </div>
+  </Modal>
+{/if}
+
 <style>
   .print-card {
     background: var(--surface);
@@ -246,13 +308,17 @@
     width: 72px;
     height: 72px;
     border-radius: var(--radius);
-    background: var(--surface2);
+    background: #0f1421;
     border: 1px solid var(--border);
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
+    transition: background 0.3s ease, border-color 0.15s;
   }
+
+  .thumb-clickable { cursor: pointer; }
+  .thumb-clickable:hover { border-color: var(--border2); }
 
   .thumb-img {
     width: 100%;
@@ -459,5 +525,38 @@
     padding: 6px 10px;
     background: var(--danger-dim);
     border-radius: var(--radius-sm);
+  }
+
+  /* thumb modal */
+  .thumb-lb {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 12px;
+    width: min(520px, calc(100vw - 32px));
+    box-shadow: 0 24px 80px -20px rgba(0,0,0,0.7), 0 4px 16px rgba(0,0,0,0.4);
+    overflow: hidden;
+  }
+  .thumb-lb-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 11px 14px; border-bottom: 1px solid var(--border); gap: 10px;
+  }
+  .thumb-lb-name {
+    font-size: 13px; font-weight: 600; color: var(--text);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0;
+  }
+  .thumb-lb-close {
+    width: 26px; height: 26px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 50%; background: var(--surface2); border: 1px solid var(--border);
+    color: var(--muted); cursor: pointer; flex-shrink: 0;
+  }
+  .thumb-lb-close:hover { background: var(--border); color: var(--text); }
+  .thumb-lb-img-wrap {
+    display: flex; align-items: center; justify-content: center;
+    padding: 12px; transition: background 0.3s ease;
+  }
+  .thumb-lb-img {
+    display: block; max-width: 100%; max-height: 70vh;
+    object-fit: contain; border-radius: 6px;
   }
 </style>

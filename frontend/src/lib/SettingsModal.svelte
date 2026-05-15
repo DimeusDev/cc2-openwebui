@@ -351,5 +351,7 @@
     .nav-item { flex-direction: column; gap: 4px; min-width: 88px; padding: 8px 10px; }
     .nav-desc { display: none; }
     .nav-rail { display: none; }
+    .content { padding: 14px 14px 16px; }
+    .modal-foot { padding: 10px 14px; }
   }
 </style>

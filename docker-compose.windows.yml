@@ -1,0 +1,16 @@
+services:
+  cc2-openwebui:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: cc2-openwebui:latest
+    container_name: cc2-openwebui
+    restart: unless-stopped
+    ports:
+      - "8484:8484"
+      - "3333:3333"
+    volumes:
+      - cc2_openwebui_state:/work
+
+volumes:
+  cc2_openwebui_state:

@@ -329,5 +329,8 @@
 
   @media (max-width: 700px) {
     .row { grid-template-columns: 1fr; gap: 8px; }
+    .dest-head { flex-wrap: wrap; gap: 4px 8px; }
+    .dest-acts { margin-left: 0; width: 100%; flex-wrap: wrap; padding-top: 2px; }
+    .toggles-grid { grid-template-columns: 1fr; }
   }
 </style>
