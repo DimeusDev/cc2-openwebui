@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { printer, showToast } from '../stores';
+  import { showToast } from '../stores';
   import { getFiles, getHistory, startPrint, uploadGcode, type HistoryTask } from '../api';
   import type { PrinterFile } from '../stores';
   import { toErrorMessage } from './errors';
@@ -11,17 +11,17 @@
   let loading = false;
   let error = '';
   let historyFiles: PrinterFile[] = [];
+  let localFiles: PrinterFile[] = [];
+  let usbFiles: PrinterFile[] = [];
 
   let printModalOpen = false;
   let printModalFile: PrinterFile | null = null;
-
-  $: files = $printer.files;
 
   async function loadFiles() {
     loading = true;
     error = '';
     try {
-      await getFiles('local', 1, 50);
+      localFiles = await getFiles('local', 1, 50);
     } catch (e) {
       error = toErrorMessage(e);
     } finally {
@@ -55,14 +55,13 @@
     else loadHistory();
   }
 
-  let usbFiles: PrinterFile[] = [];
   let usbError = '';
 
   async function loadUsbFiles() {
     loading = true;
     usbError = '';
     try {
-      await getFiles('udisk', 1, 50);
+      usbFiles = await getFiles('udisk', 1, 50);
     } catch (e) {
       usbError = toErrorMessage(e);
     } finally {
@@ -210,8 +209,8 @@
       {#if loading}
         <div class="empty">Loading...</div>
       {:else}
-        {@const displayFiles = activeTab === 'history' ? historyFiles : files}
-        {#if displayFiles.length === 0}
+        {@const displayFiles = activeTab === 'history' ? historyFiles : activeTab === 'udisk' ? usbFiles : localFiles}
+        {#if displayFiles == null ||displayFiles.length === 0}
           <div class="empty">
             {activeTab === 'local' ? 'No files found. Click Refresh to load.' : activeTab === 'udisk' ? 'No USB files found. Insert USB drive and click Refresh.' : 'No print history found.'}
           </div>

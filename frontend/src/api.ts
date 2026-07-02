@@ -1,4 +1,5 @@
 import type { DetectionStatus, DetectionPoint } from './stores';
+import type { PrinterFile } from './stores';
 
 const BASE = '';
 
@@ -270,9 +271,10 @@ export async function startPrint(filename: string, storage_media: string = 'loca
   if (!res.ok) await apiError(res, 'Failed to start print');
 }
 
-export async function getFiles(storage: string = 'local', pageNumber: number = 1, pageSize: number = 50): Promise<void> {
+export async function getFiles(storage: string = 'local', pageNumber: number = 1, pageSize: number = 50): Promise<PrinterFile[]> {
   const res = await fetch(`${BASE}/api/printer/files?storage=${storage}&page_number=${pageNumber}&page_size=${pageSize}`);
   if (!res.ok) await apiError(res, 'Failed to get file list');
+  return res.json();
 }
 
 export async function uploadGcode(file: File): Promise<{ ok: boolean; bytes: number }> {
