@@ -61,7 +61,7 @@
     loading = true;
     usbError = '';
     try {
-      usbFiles = await getFiles('udisk', 1, 50);
+      usbFiles = await getFiles('u-disk', 1, 50);
     } catch (e) {
       usbError = toErrorMessage(e);
     } finally {
@@ -76,7 +76,7 @@
 
   async function handlePrint(opts: PrintOptions) {
     if (!opts.filename) return;
-    const storage = activeTab === 'udisk' ? 'udisk' : 'local';
+    const storage = activeTab === 'udisk' ? 'u-disk' : 'local';
     try {
       await startPrint(opts.filename, storage, {
         plate: opts.plate,
