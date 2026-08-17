@@ -24,13 +24,20 @@ pub async fn discover_printer_id(
 
     info!("connecting to {ip}:1883 for printer ID discovery");
 
-    let wildcard = "elegoo/+/api_status";
-    client
-        .subscribe(wildcard, QoS::AtMostOnce)
-        .await
-        .map_err(|e| PrinterError::Registration(format!("subscribe failed: {e}")))?;
+    let discovery_topics = [
+        "elegoo/+/+/api_request",
+        "elegoo/+/+/api_response",
+        "elegoo/+/api_status",
+    ];
 
-    debug!("subscribed to wildcard topic {wildcard}, waiting for first message");
+    for topic in discovery_topics {
+        client
+            .subscribe(topic, QoS::AtMostOnce)
+            .await
+            .map_err(|e| PrinterError::Registration(format!("subscribe failed for {topic}: {e}")))?;
+
+        debug!("subscribed to discovery topic pattern: {topic}");
+    }
 
     let result = timeout(
         Duration::from_secs(timeout_secs),
@@ -50,9 +57,7 @@ pub async fn discover_printer_id(
     }
 }
 
-async fn wait_for_discovery_message(
-    eventloop: &mut rumqttc::EventLoop,
-) -> Result<String, PrinterError> {
+async fn wait_for_discovery_message(eventloop: &mut rumqttc::EventLoop,) -> Result<String, PrinterError> {
     loop {
         let notification = eventloop
             .poll()
@@ -61,10 +66,38 @@ async fn wait_for_discovery_message(
 
         if let Event::Incoming(Incoming::Publish(publish)) = notification {
             trace!("discovery received message on topic: {}", publish.topic);
-            let parts: Vec<&str> = publish.topic.split('/').collect();
-            if parts.len() >= 3 && parts[0] == "elegoo" && parts[2] == "api_status" {
-                return Ok(parts[1].to_string());
+
+            if let Some(printer_id) = extract_printer_id_from_topic(&publish.topic) {
+                info!(
+                    "discovered printer ID from topic '{}': {}",
+                    publish.topic, printer_id
+                );
+
+                return Ok(printer_id);
             }
         }
+    }
+}
+
+fn extract_printer_id_from_topic(topic: &str) -> Option<String> {
+    let parts: Vec<&str> = topic.split('/').collect();
+
+    match parts.as_slice() {
+        // elegoo/XXX/api_status
+        ["elegoo", printer_id, "api_status"] if !printer_id.is_empty() => {
+            Some((*printer_id).to_string())
+        }
+
+        // elegoo/XXX/xxx/api_request
+        ["elegoo", printer_id, _subtopic, "api_request"] if !printer_id.is_empty() => {
+            Some((*printer_id).to_string())
+        }
+
+        // elegoo/XXX/xxx/api_response
+        ["elegoo", printer_id, _subtopic, "api_response"] if !printer_id.is_empty() => {
+            Some((*printer_id).to_string())
+        }
+
+        _ => None,
     }
 }

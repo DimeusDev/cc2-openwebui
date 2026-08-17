@@ -273,7 +273,7 @@ impl PrinterManager {
             let mut attempt: u32 = 1;
             loop {
                 // rotating client_id avoids stale "already registered" sessions
-                let ws_client_id = format!("0clid{}", rand_hex(8));
+                let ws_client_id = format!("webIF_{}", rand_hex(6));
                 let attempt_start = std::time::Instant::now();
                 let result = MqttWsClient::connect_and_run(
                     &ip,

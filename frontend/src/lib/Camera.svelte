@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import { Camera as CameraIcon, Maximize2, Minimize2 } from 'lucide-svelte';
-  import { printer, showToast } from '../stores';
+  import { printer, showToast, detection } from '../stores';
   import offlineImg from '../assets/cc2-offline.png';
   import { getLatestDetection, setExcludeZones } from '../api';
   import { toErrorMessage } from './errors';
@@ -28,6 +28,7 @@
 
   $: connected = $printer.connected;
   $: cameraConnected = $printer.camera_connected;
+  $: detEnabled = $detection.enabled;
 
   // server-relative path avoids LAN mismatch
   $: streamUrl = connected ? '/api/camera/stream' : '';
@@ -258,14 +259,16 @@
         {#if editMode && zones.length > 0}
           <button class="hdr-btn danger" on:click={clearAllZones}>Clear zones</button>
         {/if}
-        <button class="hdr-btn {editMode ? 'active' : ''}" on:click={() => (editMode = !editMode)}>
-          {editMode ? 'Done' : 'Edit Zones'}
-        </button>
+        {#if detEnabled}
+          <button class="hdr-btn {editMode ? 'active' : ''}" on:click={() => (editMode = !editMode)}>
+            {editMode ? 'Done' : 'Edit Zones'}
+          </button>
+        {/if}
       {/if}
-      <svg class="chevron {collapsed ? 'up' : ''}" width="14" height="14" viewBox="0 0 14 14" fill="none">
-        <path d="M3 5l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
     </div>
+    <svg class="chevron {collapsed ? 'up' : ''}" width="14" height="14" viewBox="0 0 14 14" fill="none">
+      <path d="M3 5l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
   </div>
 
   {#if !collapsed}

@@ -213,3 +213,12 @@ export const detection = writable<DetectionStatus>({
   confirmation_frames: 2,
 });
 
+export const ui_settings = writable([
+  { id: 'job-info',    label: 'Show Job info',       checked: true, value: false ? 'on' : 'off' },
+  { id: 'control',     label: 'Show Controls',       checked: true, value: false ? 'on' : 'off' },
+  { id: 'detection',   label: 'Show DetectionPanel', checked: true, value: false ? 'on' : 'off' },
+  { id: 'files',       label: 'Show FileList',       checked: true, value: false ? 'on' : 'off' },
+  { id: 'camera',      label: 'Show Camera',         checked: true, value: false ? 'on' : 'off' },
+  { id: 'temperature', label: 'Show TempPanel',      checked: true, value: false ? 'on' : 'off' },
+  { id: 'canvas',      label: 'Show CanvasPanel',    checked: true, value: false ? 'on' : 'off' }
+]);

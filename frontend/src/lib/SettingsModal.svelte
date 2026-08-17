@@ -4,16 +4,18 @@
   import { cubicOut } from 'svelte/easing';
   import Modal from './Modal.svelte';
   import { getSettings, updateSettings, type AppSettings } from '../api';
+  import { ui_settings } from '../stores';
   import { toErrorMessage } from './errors';
   import SectionGeneral from './settings/SectionGeneral.svelte';
   import SectionDetection from './settings/SectionDetection.svelte';
   import SectionNotifications from './settings/SectionNotifications.svelte';
   import SectionLogs from './settings/SectionLogs.svelte';
+  import SectionUI from './settings/SectionUI.svelte';
   import SectionDanger from './settings/SectionDanger.svelte';
 
   const dispatch = createEventDispatcher<{ close: void }>();
 
-  type Section = 'general' | 'detection' | 'notifications' | 'logs' | 'danger';
+  type Section = 'general' | 'detection' | 'notifications' | 'logs' | 'ui_settings' | 'danger';
   export let initialSection: string = 'general';
   let activeSection: Section = (initialSection as Section) || 'general';
 
@@ -33,6 +35,14 @@
       settings = await getSettings();
     } catch {
       // fallback defaults
+    }
+
+    // load ui_settings from localStorage
+    const stored = localStorage.getItem('ui_settings');
+    if (stored) {
+      try {
+        ui_settings.set(JSON.parse(stored));
+      } catch { /* ignore */ }
     }
   });
 
@@ -70,7 +80,10 @@
     },
     {
       title: 'Advanced',
-      items: [{ id: 'danger', label: 'Danger Zone', desc: 'Reset everything', icon: 'warn' }],
+      items: [
+        { id: 'ui_settings', label: 'UI settings', desc: 'Modify UI', icon: 'layout' },
+        { id: 'danger', label: 'Danger Zone', desc: 'Reset everything', icon: 'warn' },
+      ],
     },
   ];
 
@@ -79,6 +92,7 @@
     detection: { title: 'AI Failure Detection', desc: 'AI failure detection with Obico ML container.' },
     notifications: { title: 'Notifications', desc: 'Push events via ntfy or Discord webhook. Add and configure notification destinations.' },
     logs: { title: 'Activity Logs', desc: 'Connection events, print jobs, detections, etc' },
+    ui_settings: { title: 'UI Settings', desc: 'Show or hide UI elements.' },
     danger: { title: 'Danger Zone', desc: 'Irreversible actions. Make sure you know what you are doing.' },
   };
 </script>
@@ -142,6 +156,13 @@
                     <path d="M8 6.5v3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
                     <circle cx="8" cy="11.3" r="0.7" fill="currentColor"/>
                   </svg>
+                {:else if s.icon === 'layout'}
+                  <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+                    <rect x="2" y="2" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.3"/>
+                    <rect x="9" y="2" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.3"/>
+                    <rect x="2" y="9" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.3"/>
+                    <rect x="9" y="9" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.3"/>
+                  </svg>
                 {:else}
                   <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
                     <rect x="2" y="2" width="12" height="12" rx="1.5" stroke="currentColor" stroke-width="1.3"/>
@@ -174,6 +195,8 @@
               <SectionNotifications />
             {:else if activeSection === 'logs'}
               <SectionLogs />
+            {:else if activeSection === 'ui_settings'}
+              <SectionUI />
             {:else if activeSection === 'danger'}
               <SectionDanger />
             {/if}
@@ -182,7 +205,7 @@
       </div>
     </div>
 
-    {#if activeSection !== 'logs' && activeSection !== 'danger'}
+    {#if activeSection !== 'logs' && activeSection !== 'danger' && activeSection !== 'ui_settings'}
       <div class="modal-foot">
         <div class="foot-left">
           {#if saveState === 'error'}

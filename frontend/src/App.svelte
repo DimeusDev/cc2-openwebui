@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { connect, disconnect, sendPing, wsConnected } from './ws';
-  import { printer, requestOpenSettings } from './stores';
+  import { printer, requestOpenSettings, ui_settings } from './stores';
   import { checkSetup, getVersion } from './api';
   import Onboarding from './lib/Onboarding.svelte';
   import SettingsModal from './lib/SettingsModal.svelte';
@@ -119,6 +119,15 @@
   function onKeydown(e: KeyboardEvent) {
     if (e.key === 'Escape') showSettings = false;
   }
+
+  $: showJobInfo   = $ui_settings.find(s => s.id === 'job-info')?.checked   ?? true;
+  $: showControl   = $ui_settings.find(s => s.id === 'control')?.checked    ?? true;
+  $: showDetection = $ui_settings.find(s => s.id === 'detection')?.checked  ?? true;
+  $: showFiles     = $ui_settings.find(s => s.id === 'files')?.checked      ?? true;
+  $: showCamera    = $ui_settings.find(s => s.id === 'camera')?.checked     ?? true;
+  $: showTemp      = $ui_settings.find(s => s.id === 'temperature')?.checked ?? true;
+  $: showCanvas    = $ui_settings.find(s => s.id === 'canvas')?.checked     ?? true;
+
 </script>
 
 <svelte:window on:keydown={onKeydown} />
@@ -140,15 +149,15 @@
 
     <main class="grid">
       <div class="col-left">
-        <PrintHeader />
-        <Controls />
-        <DetectionPanel />
-        <FileList />
+        {#if showJobInfo}<PrintHeader />{/if}
+        {#if showControl}<Controls />{/if}
+        {#if showDetection}<DetectionPanel />{/if}
+        {#if showFiles}<FileList />{/if}
       </div>
       <div class="col-right">
-        <Camera />
-        <TempPanel />
-        <AMSPanel />
+        {#if showCamera}<Camera />{/if}
+        {#if showTemp}<TempPanel />{/if}
+        {#if showCanvas}<AMSPanel />{/if}
       </div>
     </main>
   </div>

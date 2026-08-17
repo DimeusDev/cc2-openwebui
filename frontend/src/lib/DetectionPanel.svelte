@@ -123,8 +123,14 @@
     if (point.snapshot) modalPoint = point;
   }
 
-  async function handleToggle() {
-    try { await toggleDetection(); } catch (e) { showToast(toErrorMessage(e) || 'Failed to toggle detection', 'error'); }
+  async function handleToggle() {  
+    try {  
+      await toggleDetection();  
+      const s = await getDetectionStatus();  
+      detection.set(s);  
+    } catch (e) {  
+      showToast(toErrorMessage(e) || 'Failed to toggle detection', 'error');  
+    }  
   }
 
   let detTestOpen = false;
